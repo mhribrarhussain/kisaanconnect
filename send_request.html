@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Request - Kisaan Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">Kisaan Connect 🌾</a>
+                <ul class="nav-links" id="main-nav"></ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div style="max-width: 600px; margin: 2rem auto;">
+            <div class="card">
+                <h2>Send Request</h2>
+                <div id="product-summary" style="background: #f9f9f9; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <!-- JS Populated -->
+                </div>
+                
+                <form id="request-form">
+                    <div class="form-group">
+                        <label for="qty">Quantity Required</label>
+                        <input type="number" id="qty" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message to Farmer (Optional)</label>
+                        <textarea id="message" rows="4" placeholder="E.g., Can you deliver by Tuesday?"></textarea>
+                    </div>
+                    
+                    <div class="flex gap-1">
+                        <button type="submit" class="btn btn-primary" style="flex:1">Send Request</button>
+                        <a href="javascript:history.back()" class="btn btn-secondary" style="flex:1; text-align:center;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Kisaan Connect</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        if (!App.Auth.requireRole('consumer')) throw new Error('Unauthorized');
+        
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('productId');
+        const products = App.Store.get(App.Constants.STORAGE_KEYS.PRODUCTS, []);
+        const product = products.find(p => p.id == productId);
+
+        if (!product) {
+            alert('Product not found');
+            window.location.href = 'all_products.html';
+        }
+
+        document.getElementById('product-summary').innerHTML = `
+            <p><strong>Product:</strong> ${product.name}</p>
+            <p><strong>Price:</strong> ₹${product.price} / ${product.unit}</p>
+            <p><strong>Available:</strong> ${product.quantity} ${product.unit}</p>
+        `;
+
+        document.getElementById('request-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const qty = Number(document.getElementById('qty').value);
+            const message = document.getElementById('message').value;
+            const user = App.Auth.getCurrentUser();
+
+            if (qty > product.quantity) {
+                App.UI.showToast('Quantity exceeds available stock', 'error');
+                return;
+            }
+
+            const order = {
+                id: Date.now(),
+                productId: product.id,
+                farmerId: product.farmerId,
+                consumerId: user.id,
+                quantity: qty,
+                message: message,
+                status: 'pending',
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            const orders = App.Store.get(App.Constants.STORAGE_KEYS.ORDERS, []);
+            orders.push(order);
+            App.Store.set(App.Constants.STORAGE_KEYS.ORDERS, orders);
+
+            App.UI.showToast('Request Sent Successfully!');
+            setTimeout(() => window.location.href = 'my_requests.html', 1500);
+        });
+    </script>
+</body>
+</html>

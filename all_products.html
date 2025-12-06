@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Products - Kisaan Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">Kisaan Connect 🌾</a>
+                <ul class="nav-links" id="main-nav"></ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>Marketplace</h1>
+        
+        <div class="card" style="margin: 1rem 0;">
+            <div class="grid grid-3">
+                <div class="form-group">
+                    <label>Search</label>
+                    <input type="text" id="filter-name" placeholder="Search crop name...">
+                </div>
+                <div class="form-group">
+                    <label>Region</label>
+                    <input type="text" id="filter-region" placeholder="Filter by location...">
+                </div>
+                <div class="form-group">
+                    <label>Max Price</label>
+                    <input type="number" id="filter-price" placeholder="Max price">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+            <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+        </div>
+
+        <div id="products-grid" class="grid grid-3" style="margin-top: 2rem;">
+            <!-- JS Populated -->
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Kisaan Connect</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        const grid = document.getElementById('products-grid');
+        let allProducts = App.Store.get(App.Constants.STORAGE_KEYS.PRODUCTS, []);
+
+        function render(products) {
+            grid.innerHTML = '';
+            if (products.length === 0) {
+                grid.innerHTML = '<p class="text-muted">No products found.</p>';
+                return;
+            }
+            products.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-img">🌾</div>
+                    <div class="card-header">
+                        <h3>${p.name}</h3>
+                        <p class="text-muted">${p.location || 'Unknown Location'}</p>
+                    </div>
+                    <p class="text-muted" style="margin-bottom: 0.5rem;">${p.description.substring(0, 60)}...</p>
+                    <p style="font-size: 1.1rem;"><strong>₹${p.price}</strong> / ${p.unit}</p>
+                    <a href="product_details.html?id=${p.id}" class="btn btn-outline mt-1" style="display:block; text-align:center;">View Details</a>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function applyFilters() {
+            const name = document.getElementById('filter-name').value.toLowerCase();
+            const region = document.getElementById('filter-region').value.toLowerCase();
+            const maxPrice = document.getElementById('filter-price').value;
+
+            const filtered = allProducts.filter(p => {
+                const matchName = p.name.toLowerCase().includes(name);
+                const matchRegion = (p.location || '').toLowerCase().includes(region);
+                const matchPrice = !maxPrice || p.price <= Number(maxPrice);
+                return matchName && matchRegion && matchPrice;
+            });
+            render(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-name').value = '';
+            document.getElementById('filter-region').value = '';
+            document.getElementById('filter-price').value = '';
+            render(allProducts);
+        }
+
+        render(allProducts);
+    </script>
+</body>
+</html>

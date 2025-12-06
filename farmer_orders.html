@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Orders - Kisaan Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">Kisaan Connect 🌾</a>
+                <ul class="nav-links" id="main-nav"></ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>Received Orders</h1>
+        
+        <div id="orders-list" style="margin-top: 2rem;">
+            <!-- JS Populated -->
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Kisaan Connect</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        if (!App.Auth.requireRole('farmer')) throw new Error('Unauthorized');
+        const user = App.Auth.getCurrentUser();
+        const list = document.getElementById('orders-list');
+
+        function loadOrders() {
+            const orders = App.Store.get(App.Constants.STORAGE_KEYS.ORDERS, []).filter(o => o.farmerId === user.id);
+            const products = App.Store.get(App.Constants.STORAGE_KEYS.PRODUCTS, []);
+            const users = App.Store.get(App.Constants.STORAGE_KEYS.USERS, []);
+
+            list.innerHTML = '';
+
+            if (orders.length === 0) {
+                list.innerHTML = '<p class="text-muted">No orders received yet.</p>';
+                return;
+            }
+
+            // Sort pending first
+            orders.sort((a, b) => (a.status === 'pending' ? -1 : 1));
+
+            orders.forEach(order => {
+                const product = products.find(p => p.id === order.productId) || { name: 'Unknown Product' };
+                const consumer = users.find(u => u.id === order.consumerId) || { name: 'Unknown User', email: '' };
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center card-header">
+                        <h3>Order #${order.id}</h3>
+                        <span class="badge badge-${order.status}">${order.status}</span>
+                    </div>
+                    <p><strong>Product:</strong> ${product.name}</p>
+                    <p><strong>Quantity:</strong> ${order.quantity} ${product.unit || ''}</p>
+                    <p><strong>Buyer:</strong> ${consumer.name} (<a href="mailto:${consumer.email}">${consumer.email}</a>)</p>
+                    <p><strong>Message:</strong> ${order.message || 'None'}</p>
+                    <p class="text-muted" style="font-size:0.9rem; margin-top:0.5rem;">Date: ${order.date}</p>
+                    
+                    ${order.status === 'pending' ? `
+                        <div class="flex gap-1" style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                            <button class="btn btn-success btn-small" onclick="updateStatus(${order.id}, 'accepted')">Accept</button>
+                            <button class="btn btn-danger btn-small" onclick="updateStatus(${order.id}, 'rejected')">Reject</button>
+                        </div>
+                    ` : ''}
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        window.updateStatus = function(id, status) {
+            let orders = App.Store.get(App.Constants.STORAGE_KEYS.ORDERS, []);
+            const idx = orders.findIndex(o => o.id === id);
+            if (idx > -1) {
+                orders[idx].status = status;
+                App.Store.set(App.Constants.STORAGE_KEYS.ORDERS, orders);
+                App.UI.showToast(`Order marked as ${status}`);
+                loadOrders();
+            }
+        }
+
+        loadOrders();
+    </script>
+</body>
+</html>

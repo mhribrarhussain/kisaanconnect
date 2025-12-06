@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Kisaan Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">Kisaan Connect 🌾</a>
+                <ul class="nav-links" id="main-nav">
+                    <!-- JS will populate -->
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div style="max-width: 500px; margin: 2rem auto;">
+            <div class="card">
+                <h2 class="text-center" style="margin-bottom: 1.5rem;">Create Account</h2>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">I am a...</label>
+                        <select id="role" required onchange="toggleLocationField()">
+                            <option value="consumer">Consumer (Buyer)</option>
+                            <option value="farmer">Farmer (Seller)</option>
+                        </select>
+                    </div>
+                    <div class="form-group hidden" id="location-group">
+                        <label for="location">Farm Location (Region/State)</label>
+                        <input type="text" id="location">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+                </form>
+                <p class="text-center mt-1">
+                    Already have an account? <a href="login.html">Login here</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Kisaan Connect</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        function toggleLocationField() {
+            const role = document.getElementById('role').value;
+            const locGroup = document.getElementById('location-group');
+            if (role === 'farmer') {
+                locGroup.classList.remove('hidden');
+                document.getElementById('location').required = true;
+            } else {
+                locGroup.classList.add('hidden');
+                document.getElementById('location').required = false;
+            }
+        }
+
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const location = document.getElementById('location').value;
+
+            try {
+                App.Auth.register({
+                    name,
+                    email,
+                    password,
+                    role,
+                    location: role === 'farmer' ? location : null
+                });
+                App.UI.showToast('Registration Successful! Please login.');
+                setTimeout(() => window.location.href = 'login.html', 1500);
+            } catch (err) {
+                App.UI.showToast(err.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

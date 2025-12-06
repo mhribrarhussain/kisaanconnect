@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - Kisaan Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">Kisaan Connect 🌾</a>
+                <ul class="nav-links" id="main-nav"></ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <a href="all_products.html" class="btn btn-secondary btn-small mb-1">← Back to Listings</a>
+        
+        <div id="product-view" class="card" style="max-width: 800px; margin: 0 auto;">
+            <!-- JS Populated -->
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Kisaan Connect</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        const products = App.Store.get(App.Constants.STORAGE_KEYS.PRODUCTS, []);
+        const product = products.find(p => p.id == id);
+        const users = App.Store.get(App.Constants.STORAGE_KEYS.USERS, []);
+        const farmer = users.find(u => u.id === product?.farmerId);
+
+        const container = document.getElementById('product-view');
+
+        if (!product) {
+            container.innerHTML = '<p>Product not found.</p>';
+        } else {
+            container.innerHTML = `
+                <div class="grid grid-2">
+                    <div class="card-img" style="height: 300px;">🌾</div>
+                    <div>
+                        <h1>${product.name}</h1>
+                        <p class="text-muted" style="font-size: 1.1rem; margin-bottom: 1rem;">
+                            <span style="margin-right: 10px;">📍 ${product.location}</span>
+                            <span>👨‍🌾 ${farmer ? farmer.name : 'Unknown Farmer'}</span>
+                        </p>
+                        <h2 style="color: var(--primary-color);">₹${product.price} <span style="font-size: 1rem; color: #666;">/ ${product.unit}</span></h2>
+                        <p style="margin: 1rem 0;">${product.description}</p>
+                        <p><strong>Available Quantity:</strong> ${product.quantity} ${product.unit}</p>
+                        
+                        <div style="margin-top: 2rem;">
+                            <a href="send_request.html?productId=${product.id}" class="btn btn-primary" style="width: 100%; text-align: center;">Send Purchase Request</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

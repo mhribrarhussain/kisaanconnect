@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Dashboard - Kisaan Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">Kisaan Connect 🌾</a>
+                <ul class="nav-links" id="main-nav"></ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>Farmer Dashboard</h1>
+        <p class="text-muted" id="welcome-msg">Welcome back!</p>
+
+        <div class="grid grid-3" style="margin-top: 2rem;">
+            <div class="card">
+                <h3>My Products</h3>
+                <p class="text-muted">Manage your listings</p>
+                <h2 id="product-count" style="margin: 1rem 0; color: var(--primary-color);">0</h2>
+                <a href="farmer_products.html" class="btn btn-primary btn-small">View Products</a>
+            </div>
+            <div class="card">
+                <h3>Pending Orders</h3>
+                <p class="text-muted">Action required</p>
+                <h2 id="order-count" style="margin: 1rem 0; color: var(--accent-color);">0</h2>
+                <a href="farmer_orders.html" class="btn btn-primary btn-small">View Orders</a>
+            </div>
+            <div class="card">
+                <h3>Total Sales</h3>
+                <p class="text-muted">Completed orders</p>
+                <h2 id="sales-count" style="margin: 1rem 0; color: var(--success-color);">0</h2>
+            </div>
+        </div>
+
+        <section style="margin-top: 3rem;">
+            <h2>Quick Actions</h2>
+            <div class="flex gap-1">
+                <a href="farmer_products.html?action=add" class="btn btn-outline">Add New Product</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Kisaan Connect</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Auth Check
+        if (!App.Auth.requireRole('farmer')) throw new Error('Unauthorized');
+
+        const user = App.Auth.getCurrentUser();
+        document.getElementById('welcome-msg').textContent = `Welcome back, ${user.name} (${user.location})`;
+
+        // Load Stats
+        const products = App.Store.get(App.Constants.STORAGE_KEYS.PRODUCTS, []).filter(p => p.farmerId === user.id);
+        const orders = App.Store.get(App.Constants.STORAGE_KEYS.ORDERS, []).filter(o => o.farmerId === user.id);
+        
+        const pendingOrders = orders.filter(o => o.status === 'pending');
+        const completedOrders = orders.filter(o => o.status === 'accepted');
+
+        document.getElementById('product-count').textContent = products.length;
+        document.getElementById('order-count').textContent = pendingOrders.length;
+        document.getElementById('sales-count').textContent = completedOrders.length;
+    </script>
+</body>
+</html>

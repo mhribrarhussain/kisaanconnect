@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Requests - Kisaan Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">Kisaan Connect 🌾</a>
+                <ul class="nav-links" id="main-nav"></ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>My Requests</h1>
+        
+        <div id="requests-list" class="grid grid-2" style="margin-top: 2rem;">
+            <!-- JS Populated -->
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Kisaan Connect</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        if (!App.Auth.requireRole('consumer')) throw new Error('Unauthorized');
+        const user = App.Auth.getCurrentUser();
+        const list = document.getElementById('requests-list');
+
+        function loadRequests() {
+            const orders = App.Store.get(App.Constants.STORAGE_KEYS.ORDERS, []).filter(o => o.consumerId === user.id);
+            const products = App.Store.get(App.Constants.STORAGE_KEYS.PRODUCTS, []);
+
+            list.innerHTML = '';
+
+            if (orders.length === 0) {
+                list.innerHTML = '<p class="text-muted">No requests sent yet.</p>';
+                return;
+            }
+
+            orders.reverse().forEach(order => {
+                const product = products.find(p => p.id === order.productId) || { name: 'Unknown Product' };
+                
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center card-header">
+                        <h3>${product.name}</h3>
+                        <span class="badge badge-${order.status}">${order.status}</span>
+                    </div>
+                    <p><strong>Quantity:</strong> ${order.quantity} ${product.unit || ''}</p>
+                    <p><strong>Date:</strong> ${order.date}</p>
+                    <p><strong>Message:</strong> ${order.message || 'None'}</p>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        loadRequests();
+    </script>
+</body>
+</html>

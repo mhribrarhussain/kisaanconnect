@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Kisaan Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">Kisaan Connect 🌾</a>
+                <ul class="nav-links" id="main-nav"></ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>Manage Users</h1>
+        
+        <div id="users-list" class="grid grid-3" style="margin-top: 2rem;">
+            <!-- JS Populated -->
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Kisaan Connect</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        if (!App.Auth.requireRole('admin')) throw new Error('Unauthorized');
+        const list = document.getElementById('users-list');
+        const currentUser = App.Auth.getCurrentUser();
+
+        function loadUsers() {
+            const users = App.Store.get(App.Constants.STORAGE_KEYS.USERS, []);
+            list.innerHTML = '';
+
+            users.forEach(u => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <h3>${u.name}</h3>
+                        <span class="badge" style="background:#eee;">${u.role}</span>
+                    </div>
+                    <p>${u.email}</p>
+                    ${u.location ? `<p class="text-muted">📍 ${u.location}</p>` : ''}
+                    
+                    <div style="margin-top: 1rem;">
+                        ${u.id !== currentUser.id ? `
+                        <button class="btn btn-danger btn-small" onclick="deleteUser(${u.id})">Delete User</button>
+                        ` : '<span class="text-muted">Current User</span>'}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        window.deleteUser = function(id) {
+            if (!confirm('Are you sure? This will delete the user.')) return;
+            let users = App.Store.get(App.Constants.STORAGE_KEYS.USERS, []);
+            users = users.filter(u => u.id !== id);
+            App.Store.set(App.Constants.STORAGE_KEYS.USERS, users);
+            App.UI.showToast('User deleted');
+            loadUsers();
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>
